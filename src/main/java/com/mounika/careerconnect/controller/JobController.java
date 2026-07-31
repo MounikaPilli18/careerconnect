@@ -34,8 +34,12 @@ public class JobController {
     public JobDTO getJobById(@PathVariable int id) {
         return jobService.getJobById(id);
     }
-    @PutMapping("/jobs")
-    public JobDTO updateJob(@Valid @RequestBody JobDTO jobDTO) {
+    @PutMapping("/jobs/{id}")
+    public JobDTO updateJob(@PathVariable int id,
+                            @Valid @RequestBody JobDTO jobDTO) {
+
+        jobDTO.setJobId(id);
+
         return jobService.updateJob(jobDTO);
     }
     @DeleteMapping("/jobs/{id}")
