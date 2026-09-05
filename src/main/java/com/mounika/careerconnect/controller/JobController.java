@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
 
 import com.mounika.careerconnect.dto.JobDTO;
 import com.mounika.careerconnect.dto.PageResponse;
@@ -41,9 +42,14 @@ public class JobController {
         )
     })
     @PostMapping("/jobs")
-    public ApiResponse<JobDTO> saveJob(@Valid @RequestBody JobDTO jobDTO) {
+    public ApiResponse<JobDTO> saveJob(
+            @Valid @RequestBody JobDTO jobDTO,
+            Authentication authentication) {
 
-        JobDTO savedJob = jobService.saveJob(jobDTO);
+        JobDTO savedJob = jobService.saveJob(
+                jobDTO,
+                authentication.getName()
+        );
 
         return new ApiResponse<>(
                 "Job created successfully.",
@@ -196,6 +202,7 @@ public class JobController {
             description = "Invalid pagination or sort parameters"
         )
     })
+    
     @GetMapping("/jobs/page")
     public ApiResponse<PageResponse<JobDTO>> getJobsWithPagination(
             @RequestParam int page,
@@ -235,35 +242,62 @@ public class JobController {
         );
     }
     @Operation(
-            summary = "Update a job",
-            description = "Updates an existing job using its unique job ID."
+            summary = "Search jobs by keyword",
+            description = "Searches jobs by keyword in job title, company name, location, or description."
     )
-    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+    @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            description = "Job updated successfully"
-        ),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "400",
-            description = "Invalid job data"
+            description = "Jobs fetched successfully"
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "404",
-            description = "Job not found"
+            description = "No jobs found for the specified keyword"
         )
     })
-    
+    @GetMapping("/jobs/search")
+    public ApiResponse<List<JobDTO>> searchJobs(
+            @RequestParam String keyword) {
+
+        return new ApiResponse<>(
+                "Jobs fetched successfully.",
+                200,
+                jobService.searchJobs(keyword)
+        );
+    }
+    @Operation(
+    	    summary = "Update a job",
+    	    description = "Updates an existing job using its unique job ID."
+    	)
+    	@io.swagger.v3.oas.annotations.responses.ApiResponses({
+    	    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+    	        responseCode = "200",
+    	        description = "Job updated successfully"
+    	    ),
+    	    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+    	        responseCode = "400",
+    	        description = "Invalid job data"
+    	    ),
+    	    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+    	        responseCode = "404",
+    	        description = "Job not found"
+    	    )
+    	})
     @PutMapping("/jobs/{id}")
     public ApiResponse<JobDTO> updateJob(
             @PathVariable int id,
-            @Valid @RequestBody JobDTO jobDTO) {
+            @Valid @RequestBody JobDTO jobDTO,
+            Authentication authentication) {
 
         jobDTO.setJobId(id);
 
         return new ApiResponse<>(
                 "Job updated successfully.",
                 200,
-                jobService.updateJob(jobDTO)
+                jobService.updateJob(
+                        jobDTO,
+                        authentication.getName()
+                )
         );
     }
     @Operation(
@@ -281,9 +315,14 @@ public class JobController {
         )
     })
     @DeleteMapping("/jobs/{id}")
-    public ApiResponse<String> deleteJob(@PathVariable int id) {
+    public ApiResponse<String> deleteJob(
+            @PathVariable int id,
+            Authentication authentication) {
 
-        jobService.deleteJob(id);
+        jobService.deleteJob(
+                id,
+                authentication.getName()
+        );
 
         return new ApiResponse<>(
                 "Job deleted successfully.",
