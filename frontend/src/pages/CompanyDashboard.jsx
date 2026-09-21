@@ -5,6 +5,8 @@ function CompanyDashboard({ onPostJob, onLogout }) {
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [applicants, setApplicants] = useState({})
+  const [selectedJobId, setSelectedJobId] = useState(null)
 
   useEffect(() => {
     const username = localStorage.getItem('username')
@@ -45,7 +47,6 @@ function CompanyDashboard({ onPostJob, onLogout }) {
           jobsData = response.data || []
         }
 
-        
         setProfile(profileData)
 
         const companyJobs = jobsData.filter(
@@ -53,7 +54,7 @@ function CompanyDashboard({ onPostJob, onLogout }) {
             job.companyName?.toLowerCase() ===
             profileData.companyName?.toLowerCase()
         )
-        
+
         setJobs(companyJobs)
       })
       .catch((err) => {
@@ -64,11 +65,63 @@ function CompanyDashboard({ onPostJob, onLogout }) {
       })
   }, [])
 
-  if (loading) {
-    return <div className="page-message">Loading dashboard...</div>
+  const handleViewApplicants = async (jobId) => {
+    if (selectedJobId === jobId) {
+      setSelectedJobId(null)
+      return
+    }
+
+    const username = localStorage.getItem('username')
+    const password = localStorage.getItem('password')
+
+    if (!username || !password) {
+      setError('Login information is missing. Please login again.')
+      return
+    }
+
+    const credentials = btoa(`${username}:${password}`)
+
+    try {
+      const response = await fetch(
+        `http://localhost:8081/applications/job/${jobId}`,
+        {
+          headers: {
+            Authorization: `Basic ${credentials}`,
+          },
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(
+          typeof data === 'string'
+            ? data
+            : 'Unable to load applicants'
+        )
+      }
+
+      setApplicants((previousApplicants) => ({
+        ...previousApplicants,
+        [jobId]: data,
+      }))
+
+      setSelectedJobId(jobId)
+      setError('')
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
-  if (error) {
+  if (loading) {
+    return (
+      <div className="page-message">
+        Loading dashboard...
+      </div>
+    )
+  }
+
+  if (error && !profile) {
     return (
       <div className="page-message error">
         {error}
@@ -118,6 +171,7 @@ function CompanyDashboard({ onPostJob, onLogout }) {
         <section className="stats">
           <div className="stat-card">
             <span>💼</span>
+
             <div>
               <h3>{jobs.length}</h3>
               <p>Jobs Posted</p>
@@ -126,6 +180,7 @@ function CompanyDashboard({ onPostJob, onLogout }) {
 
           <div className="stat-card">
             <span>🏢</span>
+
             <div>
               <h3>{profile?.companyName || '-'}</h3>
               <p>Company</p>
@@ -134,6 +189,7 @@ function CompanyDashboard({ onPostJob, onLogout }) {
 
           <div className="stat-card">
             <span>📍</span>
+
             <div>
               <h3>{profile?.companyLocation || '-'}</h3>
               <p>Location</p>
@@ -145,7 +201,10 @@ function CompanyDashboard({ onPostJob, onLogout }) {
           <div className="section-heading">
             <div>
               <h2>Your Job Opportunities</h2>
-              <p>Manage the jobs posted by your company.</p>
+
+              <p>
+                Manage the jobs posted by your company.
+              </p>
             </div>
 
             <button
@@ -155,6 +214,12 @@ function CompanyDashboard({ onPostJob, onLogout }) {
               + Post Job
             </button>
           </div>
+
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
 
           {jobs.length === 0 ? (
             <div className="empty-state">
@@ -176,24 +241,114 @@ function CompanyDashboard({ onPostJob, onLogout }) {
             </div>
           ) : (
             <div className="job-list">
-              {jobs.map((job) => (
-                <div
-                  className="job-card"
-                  key={job.jobId}
-                >
-                  <div>
-                    <h3>{job.jobTitle}</h3>
+              {jobs.map((job) => {
+                const jobApplicants =
+                  applicants[job.jobId] || []
 
-                    <p>
-                      {job.companyName} · {job.location}
-                    </p>
-                  </div>
+                const isSelected =
+                  selectedJobId === job.jobId
 
-                  <div className="job-salary">
-                    ₹{job.salary}
+                return (
+                  <div
+                    className="job-card"
+                    key={job.jobId}
+                  >
+                    <div>
+                      <h3>{job.jobTitle}</h3>
+
+                      <p>
+                        {job.companyName} · {job.location}
+                      </p>
+
+                      {job.description && (
+                        <p>
+                          {job.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="job-card-actions">
+                      <div className="job-salary">
+                        ₹{job.salary}
+                      </div>
+
+                      <button
+                        className="secondary-button"
+                        onClick={() =>
+                          handleViewApplicants(job.jobId)
+                        }
+                      >
+                        {isSelected
+                          ? 'Hide Applicants'
+                          : 'View Applicants'}
+                      </button>
+                    </div>
+
+                    {isSelected && (
+                      <div className="applicants-section">
+                        <h4>
+                          Applicants ({jobApplicants.length})
+                        </h4>
+
+                        {jobApplicants.length === 0 ? (
+                          <p>
+                            No students have applied for
+                            this job yet.
+                          </p>
+                        ) : (
+                          <div className="applicant-list">
+                            {jobApplicants.map(
+                              (applicant) => (
+                                <div
+                                  className="applicant-card"
+                                  key={
+                                    applicant.applicationId
+                                  }
+                                >
+                                  <h4>
+                                    {applicant.studentName}
+                                  </h4>
+
+                                  <p>
+                                    <strong>Email:</strong>{' '}
+                                    {applicant.email}
+                                  </p>
+
+                                  <p>
+                                    <strong>Phone:</strong>{' '}
+                                    {applicant.phone}
+                                  </p>
+
+                                  <p>
+                                    <strong>Location:</strong>{' '}
+                                    {applicant.location}
+                                  </p>
+
+                                  <p>
+                                    <strong>CGPA:</strong>{' '}
+                                    {applicant.cgpa}
+                                  </p>
+
+                                  <p>
+                                    <strong>Resume:</strong>{' '}
+                                    {applicant.resume ||
+                                      'Not provided'}
+                                  </p>
+
+                                  <p>
+                                    <strong>Status:</strong>{' '}
+                                    {applicant.status}
+                                  </p>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </section>

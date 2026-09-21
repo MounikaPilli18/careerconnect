@@ -3,7 +3,6 @@ import { useState } from 'react'
 function PostJob({ onBack }) {
   const [form, setForm] = useState({
     jobTitle: '',
-    companyName: '',
     location: '',
     salary: '',
     description: '',
@@ -51,7 +50,6 @@ function PostJob({ onBack }) {
 
           body: JSON.stringify({
             jobTitle: form.jobTitle,
-            companyName: form.companyName,
             location: form.location,
             salary: Number(form.salary),
             description: form.description,
@@ -71,7 +69,6 @@ function PostJob({ onBack }) {
 
       setForm({
         jobTitle: '',
-        companyName: '',
         location: '',
         salary: '',
         description: '',
@@ -85,7 +82,9 @@ function PostJob({ onBack }) {
 
   return (
     <div className="form-page">
+
       <header className="form-header">
+
         <button
           className="back-button"
           onClick={onBack}
@@ -98,13 +97,16 @@ function PostJob({ onBack }) {
         <p>
           Find talented candidates for your company.
         </p>
+
       </header>
 
       <main className="form-container">
+
         <form
           onSubmit={handleSubmit}
           className="job-form"
         >
+
           {message && (
             <div className="success-message">
               {message}
@@ -126,19 +128,6 @@ function PostJob({ onBack }) {
               value={form.jobTitle}
               onChange={handleChange}
               placeholder="Java Spring Boot Developer"
-              required
-            />
-          </label>
-
-          <label>
-            Company Name
-
-            <input
-              type="text"
-              name="companyName"
-              value={form.companyName}
-              onChange={handleChange}
-              placeholder="Wipro"
               required
             />
           </label>
@@ -190,8 +179,11 @@ function PostJob({ onBack }) {
           >
             {saving ? 'Posting...' : 'Post Job'}
           </button>
+
         </form>
+
       </main>
+
     </div>
   )
 }

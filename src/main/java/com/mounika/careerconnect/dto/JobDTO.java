@@ -10,7 +10,7 @@ public class JobDTO {
     @NotBlank(message = "Job Title cannot be empty")
     private String jobTitle;
 
-    @NotBlank(message = "Company Name cannot be empty")
+   
     private String companyName;
 
     @NotBlank(message = "Location cannot be empty")

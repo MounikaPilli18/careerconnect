@@ -12,6 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import java.util.List;
 
 @Configuration
@@ -23,65 +24,88 @@ public class SecurityConfig {
             DaoAuthenticationProvider authenticationProvider) throws Exception {
 
         http
-    .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable())
 
-    .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .cors(cors ->
+                cors.configurationSource(corsConfigurationSource())
+            )
 
-    .authenticationProvider(authenticationProvider)
+            .authenticationProvider(authenticationProvider)
 
             .authorizeHttpRequests(auth -> auth
 
-            	    // Public registration
-            	    .requestMatchers(
-            	        "/users/register",
-            	        "/students/register",
-            	        "/companies/register"
-            	    ).permitAll()
+                // Public registration
+                .requestMatchers(
+                    "/users/register",
+                    "/students/register",
+                    "/companies/register"
+                ).permitAll()
 
-            	    // Swagger / OpenAPI
-            	    .requestMatchers(
-            	        "/swagger-ui/**",
-            	        "/swagger-ui.html",
-            	        "/v3/api-docs/**"
-            	    ).permitAll()
+                // Swagger / OpenAPI
+                .requestMatchers(
+                    "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/v3/api-docs/**"
+                ).permitAll()
 
-            	    // Student profile
-            	    .requestMatchers(
-            	        HttpMethod.GET,
-            	        "/students/me"
-            	    ).hasRole("STUDENT")
+                // Student profile
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/students/me"
+                ).hasRole("STUDENT")
 
-            	    // Company profile
-            	    .requestMatchers(
-            	        HttpMethod.GET,
-            	        "/companies/me"
-            	    ).hasRole("COMPANY")
+                // Company profile
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/companies/me"
+                ).hasRole("COMPANY")
 
-            	    // Anyone authenticated can view jobs
-            	    .requestMatchers(
-            	        HttpMethod.GET,
-            	        "/jobs/**"
-            	    ).authenticated()
+                // Anyone authenticated can view jobs
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/jobs/**"
+                ).authenticated()
 
-            	    // Only companies can manage jobs
-            	    .requestMatchers(
-            	        HttpMethod.POST,
-            	        "/jobs"
-            	    ).hasRole("COMPANY")
+                // Only companies can create jobs
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/jobs"
+                ).hasRole("COMPANY")
 
-            	    .requestMatchers(
-            	        HttpMethod.PUT,
-            	        "/jobs/**"
-            	    ).hasRole("COMPANY")
+                // Only companies can update jobs
+                .requestMatchers(
+                    HttpMethod.PUT,
+                    "/jobs/**"
+                ).hasRole("COMPANY")
 
-            	    .requestMatchers(
-            	        HttpMethod.DELETE,
-            	        "/jobs/**"
-            	    ).hasRole("COMPANY")
+                // Only companies can delete jobs
+                .requestMatchers(
+                    HttpMethod.DELETE,
+                    "/jobs/**"
+                ).hasRole("COMPANY")
 
-            	    // Everything else requires authentication
-            	    .anyRequest().authenticated()
-            	)
+                // Only students can apply for jobs
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/applications/apply/**"
+                ).hasRole("STUDENT")
+
+                // Only students can view their applications
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/applications/my"
+                ).hasRole("STUDENT")
+
+// Only companies can view applicants for their jobs
+                .requestMatchers(
+                  HttpMethod.GET,
+               "/applications/job/**"
+             ).hasRole("COMPANY")
+             
+             // Everything else requires authentication
+
+                .anyRequest().authenticated()
+            )
 
             .httpBasic(httpBasic -> {});
 
@@ -105,30 +129,45 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-@Bean
-public CorsConfigurationSource corsConfigurationSource() {
 
-    CorsConfiguration configuration = new CorsConfiguration();
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
 
-    configuration.setAllowedOrigins(
-        List.of("http://localhost:5173")
-    );
+        CorsConfiguration configuration =
+                new CorsConfiguration();
 
-    configuration.setAllowedMethods(
-        List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")
-    );
+        configuration.setAllowedOrigins(
+            List.of("http://localhost:5173")
+        );
 
-    configuration.setAllowedHeaders(
-        List.of("Authorization", "Content-Type", "Accept")
-    );
+        configuration.setAllowedMethods(
+            List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"
+            )
+        );
 
-    configuration.setAllowCredentials(true);
+        configuration.setAllowedHeaders(
+            List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept"
+            )
+        );
 
-    UrlBasedCorsConfigurationSource source =
-            new UrlBasedCorsConfigurationSource();
+        configuration.setAllowCredentials(true);
 
-    source.registerCorsConfiguration("/**", configuration);
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
 
-    return source;
-}
+        source.registerCorsConfiguration(
+            "/**",
+            configuration
+        );
+
+        return source;
+    }
 }

@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import './App.css'
+
 import Login from './pages/Login'
 import StudentRegister from './pages/StudentRegister'
+import StudentDashboard from './pages/StudentDashboard'
 import CompanyDashboard from './pages/CompanyDashboard'
 import PostJob from './pages/PostJob'
 
@@ -12,22 +14,24 @@ function App() {
   const handleLogin = (loginData) => {
     setUser(loginData)
 
-    // Save credentials so the dashboard can call the backend.
-    if (loginData.username) {
-      localStorage.setItem('username', loginData.username)
-    }
+    localStorage.setItem('username', loginData.username)
+    localStorage.setItem('password', loginData.password)
+    localStorage.setItem('role', loginData.role)
 
-    if (loginData.password) {
-      localStorage.setItem('password', loginData.password)
+    if (loginData.role === 'STUDENT') {
+      setPage('student-dashboard')
+    } else {
+      setPage('dashboard')
     }
-
-    setPage('dashboard')
   }
 
   const handleLogout = () => {
     setUser(null)
+
     localStorage.removeItem('username')
     localStorage.removeItem('password')
+    localStorage.removeItem('role')
+
     setPage('home')
   }
 
@@ -39,11 +43,21 @@ function App() {
       />
     )
   }
+
   if (page === 'student-register') {
     return (
       <StudentRegister
         onBack={() => setPage('home')}
         onRegistered={() => setPage('login')}
+      />
+    )
+  }
+
+  if (page === 'student-dashboard' && user) {
+    return (
+      <StudentDashboard
+        user={user}
+        onLogout={handleLogout}
       />
     )
   }
@@ -69,108 +83,92 @@ function App() {
 
   return (
     <div className="app">
-      <nav className="navbar">
-        <div className="logo">CareerConnect</div>
 
-        <div className="nav-links">
-          <a href="#jobs">Jobs</a>
-          <a href="#about">About</a>
-
-          <button
-            className="login-btn"
-            onClick={() => setPage('login')}
-          >
-            Login
-          </button>
+      <header className="navbar">
+        <div className="logo">
+          CareerConnect
         </div>
-      </nav>
 
-      <main>
-        ```jsx
-<section className="hero-section">
-  <div className="hero-content">
-    <p className="tagline">
-      YOUR CAREER. YOUR FUTURE.
-    </p>
+        <button
+          className="nav-login"
+          onClick={() => setPage('login')}
+        >
+          Login
+        </button>
+      </header>
 
-    <h1>
-      Connect with your
-      <span> dream career.</span>
-    </h1>
+      <main className="hero">
 
-    <p className="hero-text">
-      CareerConnect brings students and companies
-      together. Discover opportunities, showcase your
-      skills, and take the next step in your career.
-    </p>
+        <div className="hero-content">
 
-    <div className="hero-buttons">
-      <button
-        className="primary-btn"
-        onClick={() => {
-          document
-            .getElementById('jobs')
-            ?.scrollIntoView()
-        }}
-      >
-        Find Jobs
-      </button>
+          <p className="hero-label">
+            CAREERCONNECT
+          </p>
 
-      <button
-        className="secondary-btn"
-        onClick={() => setPage('student-register')}
-      >
-        Register as Student
-      </button>
+          <h1>
+            Connect your skills
+            <br />
+            with your future.
+          </h1>
 
-      <button
-        className="secondary-btn"
-        onClick={() => setPage('login')}
-      >
-        Register as Company
-      </button>
-    </div>
-  </div>
+          <p className="hero-text">
+            Find opportunities, connect with companies,
+            and take the next step in your career.
+          </p>
 
-  <div className="hero-card">
-    <div className="card-icon">💼</div>
+          <div className="hero-buttons">
 
-    <h2>Find your opportunity</h2>
+            <button
+              className="primary-button"
+              onClick={() => setPage('login')}
+            >
+              Login
+            </button>
 
-    <p>
-      Explore jobs from companies looking for talented
-      students and professionals.
-    </p>
+            <button
+              className="secondary-button"
+              onClick={() => setPage('student-register')}
+            >
+              Register as Student
+            </button>
 
-    <div className="stats">
-      <div>
-        <strong>100+</strong>
-        <small>Jobs</small>
-      </div>
+          </div>
 
-      <div>
-        <strong>50+</strong>
-        <small>Companies</small>
-      </div>
+        </div>
 
-      <div>
-        <strong>1K+</strong>
-        <small>Students</small>
-      </div>
-    </div>
-  </div>
-</section>
-```
+      </main>
 
-        <section id="jobs" className="jobs-placeholder">
-          <h2>Career opportunities</h2>
+      <section className="features">
+
+        <div className="feature-card">
+          <h3>🎓 For Students</h3>
 
           <p>
-            Job search will be connected to the CareerConnect
-            backend next.
+            Create your profile and discover job
+            opportunities from companies.
           </p>
-        </section>
-      </main>
+        </div>
+
+        <div className="feature-card">
+          <h3>🏢 For Companies</h3>
+
+          <p>
+            Post job opportunities and connect
+            with talented students.
+          </p>
+        </div>
+
+        <div className="feature-card">
+          <h3>💼 Find Opportunities</h3>
+
+          <p>
+            Search available jobs and find
+            opportunities that match your skills.
+          </p>
+        </div>
+
+      </section>
+
     </div>
   )
 }
