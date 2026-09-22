@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { apiRequest } from '../api/api'
 
 function PostJob({ onBack }) {
   const [form, setForm] = useState({
@@ -26,44 +27,19 @@ function PostJob({ onBack }) {
     setError('')
     setSaving(true)
 
-    const username = localStorage.getItem('username')
-    const password = localStorage.getItem('password')
-
-    if (!username || !password) {
-      setError('Login information is missing.')
-      setSaving(false)
-      return
-    }
-
-    const credentials = btoa(`${username}:${password}`)
-
     try {
-      const response = await fetch(
-        'http://localhost:8081/jobs',
-        {
-          method: 'POST',
-
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Basic ${credentials}`,
-          },
-
-          body: JSON.stringify({
-            jobTitle: form.jobTitle,
-            location: form.location,
-            salary: Number(form.salary),
-            description: form.description,
-          }),
-        }
-      )
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(
-          data.message || 'Failed to create job'
-        )
-      }
+      await apiRequest('/jobs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          jobTitle: form.jobTitle,
+          location: form.location,
+          salary: Number(form.salary),
+          description: form.description,
+        }),
+      })
 
       setMessage('Job posted successfully! 🎉')
 
@@ -82,9 +58,7 @@ function PostJob({ onBack }) {
 
   return (
     <div className="form-page">
-
       <header className="form-header">
-
         <button
           className="back-button"
           onClick={onBack}
@@ -97,22 +71,19 @@ function PostJob({ onBack }) {
         <p>
           Find talented candidates for your company.
         </p>
-
       </header>
 
       <main className="form-container">
+        {message && (
+          <div className="success-message">
+            {message}
+          </div>
+        )}
 
         <form
           onSubmit={handleSubmit}
           className="job-form"
         >
-
-          {message && (
-            <div className="success-message">
-              {message}
-            </div>
-          )}
-
           {error && (
             <div className="error-message">
               {error}
@@ -179,11 +150,8 @@ function PostJob({ onBack }) {
           >
             {saving ? 'Posting...' : 'Post Job'}
           </button>
-
         </form>
-
       </main>
-
     </div>
   )
 }

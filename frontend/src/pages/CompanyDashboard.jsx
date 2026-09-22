@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiRequest } from '../api/api'
 
 function CompanyDashboard({ onPostJob, onLogout }) {
   const [profile, setProfile] = useState(null)
@@ -9,47 +10,16 @@ function CompanyDashboard({ onPostJob, onLogout }) {
   const [selectedJobId, setSelectedJobId] = useState(null)
 
   useEffect(() => {
-    const username = localStorage.getItem('username')
-    const password = localStorage.getItem('password')
-
-    if (!username || !password) {
-      setError('Login information is missing. Please login again.')
-      setLoading(false)
-      return
-    }
-
-    const credentials = btoa(`${username}:${password}`)
-
     Promise.all([
-      fetch('http://localhost:8081/companies/me', {
-        headers: {
-          Authorization: `Basic ${credentials}`,
-        },
-      }),
-
-      fetch('http://localhost:8081/jobs', {
-        headers: {
-          Authorization: `Basic ${credentials}`,
-        },
-      }),
+      apiRequest('/companies/me'),
+      apiRequest('/jobs'),
     ])
-      .then(async ([profileResponse, jobsResponse]) => {
-        if (!profileResponse.ok) {
-          throw new Error('Unable to load company profile')
-        }
-
-        const profileData = await profileResponse.json()
-
-        let jobsData = []
-
-        if (jobsResponse.ok) {
-          const response = await jobsResponse.json()
-          jobsData = response.data || []
-        }
-
+      .then(([profileData, jobsData]) => {
         setProfile(profileData)
 
-        const companyJobs = jobsData.filter(
+        const allJobs = jobsData.data || []
+
+        const companyJobs = allJobs.filter(
           (job) =>
             job.companyName?.toLowerCase() ===
             profileData.companyName?.toLowerCase()
@@ -71,35 +41,10 @@ function CompanyDashboard({ onPostJob, onLogout }) {
       return
     }
 
-    const username = localStorage.getItem('username')
-    const password = localStorage.getItem('password')
-
-    if (!username || !password) {
-      setError('Login information is missing. Please login again.')
-      return
-    }
-
-    const credentials = btoa(`${username}:${password}`)
-
     try {
-      const response = await fetch(
-        `http://localhost:8081/applications/job/${jobId}`,
-        {
-          headers: {
-            Authorization: `Basic ${credentials}`,
-          },
-        }
+      const data = await apiRequest(
+        `/applications/job/${jobId}`
       )
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(
-          typeof data === 'string'
-            ? data
-            : 'Unable to load applicants'
-        )
-      }
 
       setApplicants((previousApplicants) => ({
         ...previousApplicants,
@@ -148,7 +93,9 @@ function CompanyDashboard({ onPostJob, onLogout }) {
       <main className="dashboard-content">
         <section className="welcome-card">
           <div>
-            <p className="small-label">WELCOME BACK</p>
+            <p className="small-label">
+              WELCOME BACK
+            </p>
 
             <h2>
               Welcome, {profile?.companyName || profile?.username}! 👋
@@ -160,12 +107,6 @@ function CompanyDashboard({ onPostJob, onLogout }) {
             </p>
           </div>
 
-          <button
-            className="primary-button"
-            onClick={onPostJob}
-          >
-            + Post a New Job
-          </button>
         </section>
 
         <section className="stats">
@@ -208,11 +149,11 @@ function CompanyDashboard({ onPostJob, onLogout }) {
             </div>
 
             <button
-              className="secondary-button"
-              onClick={onPostJob}
-            >
-              + Post Job
-            </button>
+  className="secondary-button post-job-button"
+  onClick={onPostJob}
+>
+  Post a Job
+</button>
           </div>
 
           {error && (
@@ -223,7 +164,9 @@ function CompanyDashboard({ onPostJob, onLogout }) {
 
           {jobs.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">💼</div>
+              <div className="empty-icon">
+                💼
+              </div>
 
               <h3>No jobs posted yet</h3>
 

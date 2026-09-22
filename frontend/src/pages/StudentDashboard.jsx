@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiRequest } from '../api/api'
 
 function StudentDashboard({ onLogout }) {
   const [profile, setProfile] = useState(null)
@@ -10,53 +11,12 @@ function StudentDashboard({ onLogout }) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const username = localStorage.getItem('username')
-    const password = localStorage.getItem('password')
-
-    if (!username || !password) {
-      setError('Login information is missing. Please login again.')
-      setLoading(false)
-      return
-    }
-
-    const credentials = btoa(`${username}:${password}`)
-
     Promise.all([
-      fetch('http://localhost:8081/students/me', {
-        headers: {
-          Authorization: `Basic ${credentials}`,
-        },
-      }),
-
-      fetch('http://localhost:8081/jobs', {
-        headers: {
-          Authorization: `Basic ${credentials}`,
-        },
-      }),
-
-      fetch('http://localhost:8081/applications/my', {
-        headers: {
-          Authorization: `Basic ${credentials}`,
-        },
-      }),
+      apiRequest('/students/me'),
+      apiRequest('/jobs'),
+      apiRequest('/applications/my'),
     ])
-      .then(async ([profileResponse, jobsResponse, applicationsResponse]) => {
-        if (!profileResponse.ok) {
-          throw new Error('Unable to load student profile')
-        }
-
-        if (!jobsResponse.ok) {
-          throw new Error('Unable to load jobs')
-        }
-
-        if (!applicationsResponse.ok) {
-          throw new Error('Unable to load applications')
-        }
-
-        const profileData = await profileResponse.json()
-        const jobsData = await jobsResponse.json()
-        const applicationsData = await applicationsResponse.json()
-
+      .then(([profileData, jobsData, applicationsData]) => {
         setProfile(profileData)
         setJobs(jobsData.data || [])
 
@@ -75,39 +35,13 @@ function StudentDashboard({ onLogout }) {
   }, [])
 
   const handleApply = async (jobId) => {
-    const username = localStorage.getItem('username')
-    const password = localStorage.getItem('password')
-
-    if (!username || !password) {
-      setError('Login information is missing. Please login again.')
-      return
-    }
-
     setApplyingJobId(jobId)
     setError('')
 
-    const credentials = btoa(`${username}:${password}`)
-
     try {
-      const response = await fetch(
-        `http://localhost:8081/applications/apply/${jobId}`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Basic ${credentials}`,
-          },
-        }
-      )
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(
-          typeof data === 'string'
-            ? data
-            : 'Unable to apply for this job'
-        )
-      }
+      await apiRequest(`/applications/apply/${jobId}`, {
+        method: 'POST',
+      })
 
       setAppliedJobIds((previousIds) => [
         ...previousIds,
@@ -168,7 +102,6 @@ function StudentDashboard({ onLogout }) {
       </header>
 
       <main className="dashboard-content">
-
         <section className="welcome-card">
           <div>
             <p className="small-label">
@@ -186,7 +119,6 @@ function StudentDashboard({ onLogout }) {
         </section>
 
         <section className="stats">
-
           <div className="stat-card">
             <span>💼</span>
 
@@ -213,11 +145,9 @@ function StudentDashboard({ onLogout }) {
               <p>Location</p>
             </div>
           </div>
-
         </section>
 
         <section className="jobs-section">
-
           <div className="section-heading">
             <div>
               <h2>Available Jobs</h2>
@@ -244,7 +174,6 @@ function StudentDashboard({ onLogout }) {
           )}
 
           {filteredJobs.length === 0 ? (
-
             <div className="empty-state">
               <h3>No jobs found</h3>
 
@@ -252,13 +181,9 @@ function StudentDashboard({ onLogout }) {
                 Try another search term.
               </p>
             </div>
-
           ) : (
-
             <div className="job-list">
-
               {filteredJobs.map((job) => {
-
                 const hasApplied = appliedJobIds.includes(job.jobId)
                 const isApplying = applyingJobId === job.jobId
 
@@ -267,7 +192,6 @@ function StudentDashboard({ onLogout }) {
                     className="job-card"
                     key={job.jobId}
                   >
-
                     <div>
                       <h3>{job.jobTitle}</h3>
 
@@ -281,7 +205,6 @@ function StudentDashboard({ onLogout }) {
                     </div>
 
                     <div className="job-card-actions">
-
                       <div className="job-salary">
                         ₹{job.salary}
                       </div>
@@ -301,19 +224,13 @@ function StudentDashboard({ onLogout }) {
                             ? 'Applying...'
                             : 'Apply Now'}
                       </button>
-
                     </div>
-
                   </div>
                 )
               })}
-
             </div>
-
           )}
-
         </section>
-
       </main>
     </div>
   )
