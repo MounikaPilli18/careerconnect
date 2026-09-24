@@ -88,4 +88,40 @@ public class ApplicationController {
                     .body(e.getMessage());
         }
     }
+    @PutMapping("/{applicationId}/status")
+    public ResponseEntity<?> updateApplicationStatus(
+            @PathVariable Long applicationId,
+            @RequestParam String status,
+            Authentication authentication) {
+
+        try {
+
+            Application application =
+                    applicationService.updateApplicationStatus(
+                            applicationId,
+                            status,
+                            authentication.getName()
+                    );
+
+            ApplicationDTO response = new ApplicationDTO(
+                    application.getApplicationId(),
+                    application.getJob().getJobId(),
+                    application.getJob().getJobTitle(),
+                    application.getJob().getCompanyName(),
+                    application.getJob().getLocation(),
+                    application.getJob().getSalary(),
+                    application.getAppliedAt(),
+                    application.getStatus()
+            );
+
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(e.getMessage());
+        }
+    }
+
 }

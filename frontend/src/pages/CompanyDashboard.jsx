@@ -58,6 +58,38 @@ function CompanyDashboard({ onPostJob, onLogout }) {
     }
   }
 
+  const handleStatusChange = async (
+    applicationId,
+    status,
+    jobId
+  ) => {
+    try {
+      const updatedApplication = await apiRequest(
+        `/applications/${applicationId}/status?status=${status}`,
+        {
+          method: 'PUT',
+        }
+      )
+
+      setApplicants((previousApplicants) => ({
+        ...previousApplicants,
+        [jobId]: previousApplicants[jobId].map(
+          (applicant) =>
+            applicant.applicationId === applicationId
+              ? {
+                  ...applicant,
+                  status: updatedApplication.status,
+                }
+              : applicant
+        ),
+      }))
+
+      setError('')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   if (loading) {
     return (
       <div className="page-message">
@@ -106,13 +138,11 @@ function CompanyDashboard({ onPostJob, onLogout }) {
               <strong>{profile?.role || 'COMPANY'}</strong>.
             </p>
           </div>
-
         </section>
 
         <section className="stats">
           <div className="stat-card">
             <span>💼</span>
-
             <div>
               <h3>{jobs.length}</h3>
               <p>Jobs Posted</p>
@@ -121,7 +151,6 @@ function CompanyDashboard({ onPostJob, onLogout }) {
 
           <div className="stat-card">
             <span>🏢</span>
-
             <div>
               <h3>{profile?.companyName || '-'}</h3>
               <p>Company</p>
@@ -130,7 +159,6 @@ function CompanyDashboard({ onPostJob, onLogout }) {
 
           <div className="stat-card">
             <span>📍</span>
-
             <div>
               <h3>{profile?.companyLocation || '-'}</h3>
               <p>Location</p>
@@ -142,18 +170,17 @@ function CompanyDashboard({ onPostJob, onLogout }) {
           <div className="section-heading">
             <div>
               <h2>Your Job Opportunities</h2>
-
               <p>
                 Manage the jobs posted by your company.
               </p>
             </div>
 
             <button
-  className="secondary-button post-job-button"
-  onClick={onPostJob}
->
-  Post a Job
-</button>
+              className="secondary-button post-job-button"
+              onClick={onPostJob}
+            >
+              Post a Job
+            </button>
           </div>
 
           {error && (
@@ -164,9 +191,7 @@ function CompanyDashboard({ onPostJob, onLogout }) {
 
           {jobs.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">
-                💼
-              </div>
+              <div className="empty-icon">💼</div>
 
               <h3>No jobs posted yet</h3>
 
@@ -204,9 +229,7 @@ function CompanyDashboard({ onPostJob, onLogout }) {
                       </p>
 
                       {job.description && (
-                        <p>
-                          {job.description}
-                        </p>
+                        <p>{job.description}</p>
                       )}
                     </div>
 
@@ -253,35 +276,74 @@ function CompanyDashboard({ onPostJob, onLogout }) {
                                   </h4>
 
                                   <p>
-                                    <strong>Email:</strong>{' '}
+                                    <strong>
+                                      Email:
+                                    </strong>{' '}
                                     {applicant.email}
                                   </p>
 
                                   <p>
-                                    <strong>Phone:</strong>{' '}
+                                    <strong>
+                                      Phone:
+                                    </strong>{' '}
                                     {applicant.phone}
                                   </p>
 
                                   <p>
-                                    <strong>Location:</strong>{' '}
+                                    <strong>
+                                      Location:
+                                    </strong>{' '}
                                     {applicant.location}
                                   </p>
 
                                   <p>
-                                    <strong>CGPA:</strong>{' '}
+                                    <strong>
+                                      CGPA:
+                                    </strong>{' '}
                                     {applicant.cgpa}
                                   </p>
 
                                   <p>
-                                    <strong>Resume:</strong>{' '}
+                                    <strong>
+                                      Resume:
+                                    </strong>{' '}
                                     {applicant.resume ||
                                       'Not provided'}
                                   </p>
 
-                                  <p>
-                                    <strong>Status:</strong>{' '}
-                                    {applicant.status}
-                                  </p>
+                                  <div className="applicant-status-control">
+                                    <label>
+                                      <strong>
+                                        Status:
+                                      </strong>
+                                    </label>
+
+                                    <select
+                                      value={
+                                        applicant.status ||
+                                        'APPLIED'
+                                      }
+                                      onChange={(event) =>
+                                        handleStatusChange(
+                                          applicant.applicationId,
+                                          event.target.value,
+                                          job.jobId
+                                        )
+                                      }
+                                    >
+                                      <option value="APPLIED">
+                                        APPLIED
+                                      </option>
+
+                                      <option value="SHORTLISTED">
+                                        SHORTLISTED
+                                      </option>
+
+                                      <option value="REJECTED">
+                                        REJECTED
+                                      </option>
+                                    </select>
+                                  </div>
                                 </div>
                               )
                             )}

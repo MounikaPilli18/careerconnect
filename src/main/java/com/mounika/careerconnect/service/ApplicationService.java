@@ -140,6 +140,57 @@ public class ApplicationService {
                 .toList();
     }
 
+    @Transactional
+    public Application updateApplicationStatus(
+            Long applicationId,
+            String status,
+            String username) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+        if (!"COMPANY".equalsIgnoreCase(user.getRole())) {
+            throw new RuntimeException(
+                    "Only companies can update application status"
+            );
+        }
+
+        Company company = companyRepository.findByUserId(user.getId())
+                .orElseThrow(() ->
+                        new RuntimeException("Company profile not found"));
+
+        Application application =
+                applicationRepository.findById(applicationId)
+                        .orElseThrow(() ->
+                                new RuntimeException("Application not found"));
+
+        Job job = application.getJob();
+
+        if (job.getCompany() == null ||
+            job.getCompany().getId() == null ||
+            !job.getCompany().getId().equals(company.getId())) {
+
+            throw new RuntimeException(
+                    "You are not authorized to update this application"
+            );
+        }
+
+        if (!"APPLIED".equalsIgnoreCase(status) &&
+            !"SHORTLISTED".equalsIgnoreCase(status) &&
+            !"REJECTED".equalsIgnoreCase(status)) {
+
+            throw new RuntimeException(
+                    "Invalid application status"
+            );
+        }
+
+        application.setStatus(status.toUpperCase());
+
+        return applicationRepository.save(application);
+    }
+
+
     private ApplicationDTO convertToApplicationDTO(
             Application application) {
 

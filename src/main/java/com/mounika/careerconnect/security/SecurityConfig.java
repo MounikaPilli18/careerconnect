@@ -102,6 +102,11 @@ public class SecurityConfig {
                   HttpMethod.GET,
                "/applications/job/**"
              ).hasRole("COMPANY")
+
+.requestMatchers(
+    HttpMethod.PUT,
+    "/applications/*/status"
+).hasRole("COMPANY")
              
              // Everything else requires authentication
 
