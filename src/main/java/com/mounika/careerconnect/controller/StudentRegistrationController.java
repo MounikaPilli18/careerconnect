@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
+
 import com.mounika.careerconnect.dto.StudentProfileDTO;
 import com.mounika.careerconnect.entity.Student;
 import com.mounika.careerconnect.service.StudentRegistrationService;
@@ -34,29 +35,73 @@ public class StudentRegistrationController {
                 request.getCgpa()
         );
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(student);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(student);
     }
+
     @GetMapping("/me")
-    public ResponseEntity<StudentProfileDTO> getMyProfile(Authentication authentication) {
+    public ResponseEntity<StudentProfileDTO> getMyProfile(
+            Authentication authentication) {
 
         String username = authentication.getName();
 
         Student student =
                 studentRegistrationService.getStudentByUsername(username);
 
-StudentProfileDTO profile = new StudentProfileDTO(
-            student.getId(),
-            student.getUser().getUsername(),
-            student.getUser().getRole(),
-            student.getName(),
-            student.getPhone(),
-            student.getEmail(),
-            student.getResume(),
-            student.getLocation(),
-            student.getCgpa()
-    );
+        StudentProfileDTO profile = new StudentProfileDTO(
+                student.getId(),
+                student.getUser().getUsername(),
+                student.getUser().getRole(),
+                student.getName(),
+                student.getPhone(),
+                student.getEmail(),
+                student.getResume(),
+                student.getLocation(),
+                student.getCgpa()
+        );
 
-return ResponseEntity.ok(profile);
+        return ResponseEntity.ok(profile);
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<?> updateMyProfile(
+            @RequestBody StudentRegistrationRequest request,
+            Authentication authentication) {
+
+        try {
+            String username = authentication.getName();
+
+            Student student =
+                    studentRegistrationService.updateStudentProfile(
+                            username,
+                            request.getName(),
+                            request.getPhone(),
+                            request.getEmail(),
+                            request.getResume(),
+                            request.getLocation(),
+                            request.getCgpa()
+                    );
+
+            StudentProfileDTO profile = new StudentProfileDTO(
+                    student.getId(),
+                    student.getUser().getUsername(),
+                    student.getUser().getRole(),
+                    student.getName(),
+                    student.getPhone(),
+                    student.getEmail(),
+                    student.getResume(),
+                    student.getLocation(),
+                    student.getCgpa()
+            );
+
+            return ResponseEntity.ok(profile);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(e.getMessage());
+        }
     }
 
     public static class StudentRegistrationRequest {

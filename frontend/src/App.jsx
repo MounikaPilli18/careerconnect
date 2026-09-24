@@ -6,6 +6,8 @@ import StudentRegister from './pages/StudentRegister'
 import StudentDashboard from './pages/StudentDashboard'
 import CompanyDashboard from './pages/CompanyDashboard'
 import PostJob from './pages/PostJob'
+import MyApplications from './pages/MyApplications'
+import StudentProfile from './pages/StudentProfile'
 
 function App() {
   const [page, setPage] = useState('home')
@@ -55,12 +57,34 @@ function App() {
 
   if (page === 'student-dashboard' && user) {
     return (
-      <StudentDashboard
-        user={user}
-        onLogout={handleLogout}
-      />
+  
+<StudentDashboard
+  user={user}
+  onLogout={handleLogout}
+  onMyApplications={() => setPage('my-applications')}
+  onMyProfile={() => setPage('student-profile')}
+/>
+
     )
   }
+
+if (page === 'my-applications' && user) {
+  return (
+    <MyApplications
+      onBack={() => setPage('student-dashboard')}
+      onLogout={handleLogout}
+    />
+  )
+}
+if (page === 'student-profile' && user) {
+  return (
+    <StudentProfile
+      onBack={() => setPage('student-dashboard')}
+      onLogout={handleLogout}
+    />
+  )
+}
+
 
   if (page === 'dashboard' && user) {
     return (

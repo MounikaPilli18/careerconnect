@@ -53,6 +53,7 @@ public class SecurityConfig {
                     HttpMethod.GET,
                     "/students/me"
                 ).hasRole("STUDENT")
+.requestMatchers(HttpMethod.PUT, "/students/me").hasRole("STUDENT")
 
                 // Company profile
                 .requestMatchers(

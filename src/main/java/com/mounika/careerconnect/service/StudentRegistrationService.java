@@ -74,4 +74,35 @@ public Student getStudentByUsername(String username) {
     return studentRepository.findByUserId(user.getId())
             .orElseThrow(() -> new RuntimeException("Student profile not found"));
 }
+@Transactional
+public Student updateStudentProfile(
+        String username,
+        String name,
+        String phone,
+        String email,
+        String resume,
+        String location,
+        Double cgpa) {
+
+    User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+    Student student = studentRepository.findByUserId(user.getId())
+            .orElseThrow(() -> new RuntimeException("Student profile not found"));
+
+    if (!student.getEmail().equalsIgnoreCase(email)) {
+        if (studentRepository.findByEmail(email).isPresent()) {
+            throw new RuntimeException("Email already exists");
+        }
+    }
+
+    student.setName(name);
+    student.setPhone(phone);
+    student.setEmail(email);
+    student.setResume(resume);
+    student.setLocation(location);
+    student.setCgpa(cgpa);
+
+    return studentRepository.save(student);
+}
 }

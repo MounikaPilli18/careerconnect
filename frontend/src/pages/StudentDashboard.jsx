@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../api/api'
 
-function StudentDashboard({ onLogout }) {
+function StudentDashboard({ onLogout, onMyApplications, onMyProfile }) {
   const [profile, setProfile] = useState(null)
   const [jobs, setJobs] = useState([])
   const [appliedJobIds, setAppliedJobIds] = useState([])
@@ -93,12 +93,31 @@ function StudentDashboard({ onLogout }) {
           <p>Student Dashboard</p>
         </div>
 
-        <button
-          className="logout-button"
-          onClick={onLogout}
-        >
-          Logout
-        </button>
+<div className="dashboard-header-actions">
+  <button
+    className="secondary-button"
+    onClick={onMyApplications}
+  >
+    My Applications
+  </button>
+
+<button
+  className="secondary-button"
+  onClick={onMyProfile}
+>
+  My Profile
+</button>
+
+
+  <button
+    className="logout-button"
+    onClick={onLogout}
+  >
+    Logout
+  </button>
+</div>
+
+
       </header>
 
       <main className="dashboard-content">
